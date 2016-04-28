@@ -72,6 +72,7 @@ particular:
 
 Write example:
 
+```javascript
     // Using convenience function to write a specific MIME type.
     navigator.clipboard.writeText("Howdy, partner!");
 
@@ -87,9 +88,11 @@ Write example:
     }, function() {
         console.error(“Unable to write to clipboard. :-(”);
     });
+```
 
 Read example:
 
+```javascript
     // Reading data from the clipboard.
     navigator.clipboard.read().then(function(clipboardData) {
         for (var i = 0; i < clipboardData.length; i++) {
@@ -100,9 +103,11 @@ Read example:
             }
         }
     })
-    
+```
+
 Detect clipboard change example:
 
+```javascript
     /**
      * @param {ClipboardEvent}
      */
@@ -111,7 +116,7 @@ Detect clipboard change example:
     }
 
     navigator.clipboard.addEventListener(“change”, listener);
-
+```
 
 ## Permission
 
