@@ -72,40 +72,35 @@ particular:
 
 Write example:
 
-    // Markup with specified MIME type.
-    navigator.clipboard.write({
-        “text/html”: “<b>Howdy</b>, partner!”
-    });
+    // Using convenience function to write a specific MIME type.
+    navigator.clipboard.writeText("Howdy, partner!");
 
     // Multiple MIME types.
-    navigator.clipboard.write({
-        “text/plain”: “Howdy, partner!”,
-        “text/html”: “<b>Howdy</b>, partner!”
-    });
+    var items = new DataTransferItemList();
+    items.add("text/plain", "Howdy, partner!");
+    items.add("text/html", "<b>Howdy</b>, partner!");
+    navigator.clipboard.write(items);
 
     // Use the Promise outcome to perform an action.
-    navigator.clipboard.write(“text”).then(function() {
-        console.log(“Copied successfully!”);
+    navigator.clipboard.writeText("some text").then(function() {
+        console.log(“Copied to clipboard successfully!”);
     }, function() {
-        console.error(“Unable to write. :-(”);
+        console.error(“Unable to write to clipboard. :-(”);
     });
 
 Read example:
 
-    // Common use case: pasting a string
+    // Reading data from the clipboard.
     navigator.clipboard.read().then(function(clipboardData) {
-        if (“text/plain” in clipboardData) {
-            console.log(“Your string:”, clipboardData[“text/plain”])
-        } else {
-            console.error(“No string for you!”);
+        for (var i = 0; i < clipboardData.length; i++) {
+            if (clipboardData[i].type == "text/plain") {
+                console.log(“Your string:”, clipboardData[i].getAs(“text/plain”))
+            } else {
+                console.error(“No text/plain data on clipboard.”);
+            }
         }
     })
     
-    // General case: pasting a string
-    navigator.clipboard.read().then(function(clipboardData) {
-        // Do stuff with clipboardData
-    })
-
 Detect clipboard change example:
 
     /**
@@ -126,7 +121,10 @@ Detect clipboard change example:
 Thanks to the following people for the discussions that lead to the creation
 of this proposal:
 
-***
+Daniel Cheng (Google),
+Lucas Garron (Google),
+Gary Kacmarcik (Google),
+Hallvord R. M. Steen (Mozilla),
 
 ## References
 
