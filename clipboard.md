@@ -53,7 +53,7 @@ has support for cut and copy.
 As noted, earlier, the current [Clipboard API](https://www.w3.org/TR/clipboard-apis/)
 specification that the browsers are implementing assumes that the API should be
 based on `document.execCommand()`. However, there have recently been
-[discussions](https://lists.w3.org/Archives/Public/public-webapps/2015JulSep/0235.html)
+[discussions on public-webapps](https://lists.w3.org/Archives/Public/public-webapps/2015JulSep/0235.html)
 questioning whether this is appropriate in the long term.
 
 
