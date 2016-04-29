@@ -4,6 +4,15 @@ DRAFT
 
 Proposal for a modern, asynchronous clipboard interface.
 
+## Proposal Summary
+
+1. Introduce a new object: `navigator.clipboard`
+
+2. Have `read()` and `write()` methods that return a `Promise`:
+
+3. Add a new event listener to detect clipboard change events.
+
+
 ## Background
 
 Since the introduction of
@@ -50,15 +59,6 @@ particular:
 * Some apps (e.g. rich document editors) want to read the clipboard without requiring the user to initiate an OS “paste” action every time.
 
 * Some apps (e.g. remote desktop) want to receive updates about clipboard changes.
-
-
-## Proposal Overview
-
-1. Introduce a new object: `navigator.clipboard`
-
-2. Have `read()` and `write()` methods that return a `Promise`:
-
-3. Add a new event listener to detect clipboard change events.
 
 
 ## Proposal
