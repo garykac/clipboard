@@ -65,12 +65,12 @@ particular:
 
 This section provides more details about the proposal.
 
-### `navigator.clipboard`
+#### `navigator.clipboard`
 
 Note: Having this on the `navigator` means that it would be accessible
 from workers.
 
-### `read()` and `write()` methods
+#### `read()` and `write()` methods
 
 Return a `Promise`.
 
@@ -81,7 +81,7 @@ Where a MimeTypeObject is a dict of mimetype-string:values
 
 Possibly have convenience methods like writeText(/* string */)
 
-### Event listener for clipboard change events
+#### Event listener for clipboard change events
 
 
 ## Example Usage
@@ -150,7 +150,7 @@ motivation for this proposal. In order to clean up malicious images,
 they would need to be decoded and it is not appropriate to do this on
 the main thread (large images could lock the browser).
 
-### Reading from the clipboard
+#### Reading from the clipboard
 
 Sniffing the clipboard contents. Of concern not just because of the possibility
 of PII, but also because it is not uncommon for users to copy/paste passwords
@@ -159,16 +159,16 @@ of PII, but also because it is not uncommon for users to copy/paste passwords
 Consider: Can we respect having clipboard contents marked as 'sensitive'? This
 would require OS support, but is apparently possible on OSX.
 
-### Writing to the clipboard
+#### Writing to the clipboard
 
 Inject malicious content onto the clipboard.
 
-#### Pasting Text
+###### Pasting Text
 
 Malicious text can be in the form of commands (e.g., 'rm -rf /\n') or
 script ([Self-XSS](https://en.wikipedia.org/wiki/Self-XSS)). 
 
-#### Pasting Images
+###### Pasting Images
 
 Images can be crafted to exploit bugs in the image-handling code, so they
 need to be scrubbed as well.
@@ -179,7 +179,7 @@ need to be scrubbed as well.
 To mitigate against potential abuse of this feature, we have a few obvious
 options, some of which can be combined.
 
-### Do Nothing
+#### Do Nothing
 
 Since clipboard options are considered to be basic functionality by most
 users, doing nothing to mitigate abuse is certainly an option:
@@ -194,7 +194,7 @@ Cons:
     they may be surprised to find things there they didn't explicitly
     put there (possibly overwriting something they wanted to keep).
 
-### Require a user gesture
+#### Require a user gesture
 
 Pros:
 
@@ -205,7 +205,7 @@ Cons:
 
 * This would (by design) prevent purely programmatic access to the clipboard.
 
-### Only allow from front tab
+#### Only allow from front tab
 
 Pros:
 
@@ -217,7 +217,7 @@ Cons:
     this might be a "Pro" since a clipboard history app is probably better
     implemented as a native app.)
 
-### Pop-up Notifications
+#### Pop-up Notifications
 
 A post-facto notification similar to what is done for fullscreen. Display
 something like: "New data pasted to clipboard" or "Data read from clipboard".
@@ -231,7 +231,7 @@ Cons:
 
 * ???
 
-### Permission 
+#### Permission 
 
 Ask the user for permission, either at page load (as is done for cookies in 
 Europe) or when the feature is first used.
