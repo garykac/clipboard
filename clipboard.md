@@ -8,44 +8,52 @@ Proposal for a modern, asynchronous clipboard interface.
 
 1. Introduce a new object: `navigator.clipboard`
 
-2. Have `read()` and `write()` methods that return a `Promise`:
+2. Have `read()` and `write()` methods that return a `Promise`
 
 3. Add a new event listener to detect clipboard change events.
+
+#### Goals
+
+* API for safe, asynchronous clipboard access
+
+#### Non-Goals
+
+* Eliminate all usage of `document.execCommand()`
 
 
 ## Background
 
-Since the introduction of
-[designMode](https://developer.mozilla.org/en-US/docs/Web/API/Document/designMode),
-there has been a web specification that supports clipboard access:
-[document.execCommand()](https://w3c.github.io/editing/execCommand.html).
+An API for clipboard actions (cut, copy and paste) has long been desired for webpages,
+but agreeement has been slow because of various security and usability concerns with
+the feature. In summary, giving web pages access to the clipboard introduces problems
+with clobbering (overwriting) and sniffing (surreptitiously reading) the clipboard.
 
-This API was originally not available to ordinary web pages in most browsers,
-due to concerns about clobbering the clipboard and sniffing clipboard content.
+This lack of a consistent API has forced web developers who need this feature to rely
+on alternate methods (e.g., Flash, via [ZeroClipboard](http://zeroclipboard.org/)) which
+effectively trade one set of problems for another.
 
-Thus, the only reliable way to implement this feature across browsers until 2015 was
-through Flash (e.g. [ZeroClipboard](http://zeroclipboard.org/)).
-Anecdotally, for some sites this was the last remaining use of Flash that did not have
-an open web API alternative.
+Recently, however, all major browsers have converged on support for clipboard access
+using [`document.execCommand()`](https://w3c.github.io/editing/execCommand.html):
 
-However, as of 2015 all major browsers support document.execCommand(“copy”):
+                   | cut  | copy | paste
+    -------------- | ---- | ---- | ---- |
+    IE &sup1;      |   9  |   9  |   9  |
+    Chrome &sup2;  |  42  |  42  |  42  |
+    Firefox &sup2; |  41  |  41  |   ?  |
+    Opera &sup2;   |  29  |  29  |  29  |
+    Safari &sup2;  | yes &sup3;  | yes &sup3;  |   ?  |
 
-* Internet Explorer 9 (2011-04-14)
-* [Chrome 42](https://googlechromereleases.blogspot.com/2015/04/stable-channel-update_14.html)
-    (2015-04-14; [email thread](https://groups.google.com/a/chromium.org/d/msg/blink-dev/3QL6mAhC3Lw/rZ2S3YM-9XIJ),
-    [bug](https://crbug.com/437908))
-* [Opera 29](https://dev.opera.com/blog/opera-29/) (2015-04-28)
-* [Firefox 41](https://www.mozilla.org/en-US/firefox/41.0/releasenotes/) (2015-09-22)
-* Safari Technology Preview (2016-03-30; [announcement](https://webkit.org/blog/6017/introducing-safari-technology-preview/))
+&sup1; A permission prompt to the user when the feature is used.
 
-Internet Explorer allows “paste” as well as “copy” for plain text, but shows a permission prompt to the user for both.
-All other browsers allow copying “text/plain” and/or “text/html” upon user gesture (without a user prompt).
-Also, “cut” is currently supported everywhere “copy” is supported.
+&sup2; Only permitted when executing code in response to a user action or gesture.
 
-There is work on a [Clipboard API](https://www.w3.org/TR/clipboard-apis/) specification by
-Hallvord R. M. Steen of Mozilla. However, this API is strongly rooted in the assumption
-that it should be based on document.execCommand(), and Hallvord has even
-[started a thread](https://lists.w3.org/Archives/Public/public-webapps/2015JulSep/0235.html)
+&sup3; The Safari Technology Preview ([announced on 2016-Mar-30](https://webkit.org/blog/6017/introducing-safari-technology-preview/))
+has support for cut and copy.
+
+As noted, earlier, the current [Clipboard API](https://www.w3.org/TR/clipboard-apis/)
+specification that the browsers are implementing assumes that the API should be
+based on `document.execCommand()`. However, there have recently been
+[discussions](https://lists.w3.org/Archives/Public/public-webapps/2015JulSep/0235.html)
 questioning whether this is appropriate in the long term.
 
 
