@@ -36,12 +36,12 @@ Recently, however, all major browsers have converged on support for clipboard ac
 using [`document.execCommand()`](https://w3c.github.io/editing/execCommand.html):
 
                    | cut  | copy | paste
-    -------------- | ---- | ---- | ---- |
-    IE &sup1;      |   9  |   9  |   9  |
-    Chrome &sup2;  |  42  |  42  |  42  |
-    Firefox &sup2; |  41  |  41  |   ?  |
-    Opera &sup2;   |  29  |  29  |  29  |
-    Safari &sup2;  | yes &sup3;  | yes &sup3;  |   ?  |
+    -------------- | ---- | ---- | -----
+    IE &sup1;      |   9  |   9  |    9
+    Chrome &sup2;  |  42  |  42  |   42
+    Firefox &sup2; |  41  |  41  |    ?
+    Opera &sup2;   |  29  |  29  |   29
+    Safari &sup2;  | yes &sup3;  |  yes &sup3;  |   ?
 
 &sup1; A permission prompt to the user when the feature is used.
 
@@ -55,6 +55,12 @@ specification that the browsers are implementing assumes that the API should be
 based on `document.execCommand()`. However, there have recently been
 [discussions on public-webapps](https://lists.w3.org/Archives/Public/public-webapps/2015JulSep/0235.html)
 questioning whether this is appropriate in the long term.
+
+
+## Current API
+
+What happens with `document.execCommand()` and the current clipboard operations
+that depend on it. 
 
 
 ## Motivation
@@ -192,75 +198,48 @@ options, some of which can be combined.
 Since clipboard options are considered to be basic functionality by most
 users, doing nothing to mitigate abuse is certainly an option:
 
-Pros:
+Pros:  Cut/copy/paste work as the user expects.
 
-* Cut/copy/paste work as the user expects.
-
-Cons:
-
-* Users get no indication that page interacted with the clipboard, so if
-    they may be surprised to find things there they didn't explicitly
-    put there (possibly overwriting something they wanted to keep).
+Cons: Users get no indication that page interacted with the clipboard, so
+they may be surprised to find things there they didn't explicitly put there
+(possibly overwriting something they wanted to keep).
 
 #### Require a user gesture
 
-Pros:
+Pros: Harder for malicious code to trigger since it would require some social
+engineering as well (to get the user interaction).
 
-* Harder for malicious code to trigger since it would require some social
-    engineering as well (to get the user interaction).
-
-Cons:
-
-* This would (by design) prevent purely programmatic access to the clipboard.
+Cons: This would (by design) prevent purely programmatic access to the clipboard.
 
 #### Only allow from front tab
 
-Pros:
+Pros: This behavior is probably what the user expects. At least for cut/copy/paste.
 
-* This behavior is probably what the user expects. At least for cut/copy/paste.
-
-Cons:
-
-* It would prevent the creation of a clipboard history app. (Although I think
-    this might be a "Pro" since a clipboard history app is probably better
-    implemented as a native app.)
+Cons: It would prevent the creation of a clipboard history app. (Although I think
+this might be a "Pro" since a clipboard history app is probably better
+implemented as a native app.)
 
 #### Pop-up Notifications
 
 A post-facto notification similar to what is done for fullscreen. Display
 something like: "New data pasted to clipboard" or "Data read from clipboard".
 
-Pros:
-
-* Low-friction for the user, while still notifying them of the clipboard
+Pros: Low-friction for the user, while still notifying them of the clipboard
 access.
 
-Cons:
-
-* ???
+Cons: ???
 
 #### Permission 
 
 Ask the user for permission, either at page load (as is done for cookies in 
 Europe) or when the feature is first used.
 
-Pros:
+Pros: Users need to explicitly opt-in, so UA's can throw up their hands and claim
+"Hey, it's not our fault" if something bad happens. ^_^
 
-* Users need to explicitly opt-in, so UA's can throw up their hands and claim
-    "Hey, it's not our fault" if something bad happens. ^_^
-
-Cons: 
-
-* Users dislike these interruptions to their workflow and tend not to read
-    and understand the implications. Especially with standard operations like
-    cut/copy/paste that don't sound scary.
-* Users have been trained to ignore these messages.
-
-
-## Current API
-
-What happens with `document.execCommand()` and the current clipboard operations
-that depend on it. 
+Cons:  Users dislike these interruptions to their workflow and tend not to read
+and understand the implications. Especially with standard operations like
+cut/copy/paste that don't sound scary.
 
 
 ## Acknowledgements
