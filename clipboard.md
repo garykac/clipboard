@@ -52,20 +52,36 @@ particular:
 * Some apps (e.g. remote desktop) want to receive updates about clipboard changes.
 
 
-## Proposal
+## Proposal Overview
 
 1. Introduce a new object: `navigator.clipboard`
 
 2. Have `read()` and `write()` methods that return a `Promise`:
 
-    * `write()` would take a MimeTypeObject and return a Promise<>
-    * `read()` would return a Promise<MimeTypeObject>
-
-    Where a MimeTypeObject is a dict of mimetype-string:values
-
-    Possibly have convenience methods like writeText(/* string */)
-
 3. Add a new event listener to detect clipboard change events.
+
+
+## Proposal
+
+This section provides more details about the proposal.
+
+### `navigator.clipboard`
+
+Note: Having this on the `navigator` means that it would be accessible
+from workers.
+
+### `read()` and `write()` methods
+
+Return a `Promise`.
+
+* `write()` would take a MimeTypeObject and return a Promise<>
+* `read()` would return a Promise<MimeTypeObject>
+
+Where a MimeTypeObject is a dict of mimetype-string:values
+
+Possibly have convenience methods like writeText(/* string */)
+
+### Event listener for clipboard change events
 
 
 ## Example Usage
@@ -73,52 +89,170 @@ particular:
 Write example:
 
 ```javascript
-    // Using convenience function to write a specific MIME type.
-    navigator.clipboard.writeText("Howdy, partner!");
+// Using convenience function to write a specific MIME type.
+navigator.clipboard.writeText("Howdy, partner!");
 
-    // Multiple MIME types.
-    var items = new DataTransferItemList();
-    items.add("text/plain", "Howdy, partner!");
-    items.add("text/html", "<b>Howdy</b>, partner!");
-    navigator.clipboard.write(items);
+// Multiple MIME types.
+var data = new DataTransfer();
+data.items.add("text/plain", "Howdy, partner!");
+data.items.add("text/html", "<b>Howdy</b>, partner!");
+navigator.clipboard.write(data);
 
-    // Use the Promise outcome to perform an action.
-    navigator.clipboard.writeText("some text").then(function() {
-        console.log(“Copied to clipboard successfully!”);
-    }, function() {
-        console.error(“Unable to write to clipboard. :-(”);
-    });
+// Use the Promise outcome to perform an action.
+navigator.clipboard.writeText("some text").then(function() {
+    console.log(“Copied to clipboard successfully!”);
+}, function() {
+    console.error(“Unable to write to clipboard. :-(”);
+});
 ```
 
 Read example:
 
 ```javascript
-    // Reading data from the clipboard.
-    navigator.clipboard.read().then(function(clipboardData) {
-        for (var i = 0; i < clipboardData.length; i++) {
-            if (clipboardData[i].type == "text/plain") {
-                console.log(“Your string:”, clipboardData[i].getAs(“text/plain”))
-            } else {
-                console.error(“No text/plain data on clipboard.”);
-            }
+// Reading data from the clipboard.
+navigator.clipboard.read().then(function(data) {
+    for (var i = 0; i < data.items.length; i++) {
+        if (data.items[i].type == "text/plain") {
+            console.log(“Your string:”, data.items[i].getAs(“text/plain”))
+        } else {
+            console.error(“No text/plain data on clipboard.”);
         }
-    })
+    }
+})
 ```
-
+    
 Detect clipboard change example:
 
 ```javascript
-    /**
-     * @param {ClipboardEvent}
-     */
-    function listener(clipboardEvent) {
-        // Do stuff with clipboardEvent.clipboardData
-    }
+/**
+ * @param {ClipboardEvent}
+ */
+function listener(clipboardEvent) {
+    // Do stuff with clipboardEvent.clipboardData
+}
 
-    navigator.clipboard.addEventListener(“change”, listener);
+navigator.clipboard.addEventListener(“clipboardchange”, listener);
 ```
 
-## Permission
+## Asynchronous vs Event-driven
+
+The current [Clipboard API](https://www.w3.org/TR/clipboard-apis/) is event
+driven, which is 
+
+
+## Potential for Abuse
+
+There are a few avenues for abuse that are not specific to this proposal,
+but are applicable to any API that provides clipboard access.
+
+One of the abuse vectors in particular, pasting images, is part of the 
+motivation for this proposal. In order to clean up malicious images,
+they would need to be decoded and it is not appropriate to do this on
+the main thread (large images could lock the browser).
+
+### Reading from the clipboard
+
+Sniffing the clipboard contents. Of concern not just because of the possibility
+of PII, but also because it is not uncommon for users to copy/paste passwords
+(e.g., from a password manager to a website).
+
+Consider: Can we respect having clipboard contents marked as 'sensitive'? This
+would require OS support, but is apparently possible on OSX.
+
+### Writing to the clipboard
+
+Inject malicious content onto the clipboard.
+
+#### Pasting Text
+
+Malicious text can be in the form of commands (e.g., 'rm -rf /\n') or
+script ([Self-XSS](https://en.wikipedia.org/wiki/Self-XSS)). 
+
+#### Pasting Images
+
+Images can be crafted to exploit bugs in the image-handling code, so they
+need to be scrubbed as well.
+
+
+## Mitigating Abuse
+
+To mitigate against potential abuse of this feature, we have a few obvious
+options, some of which can be combined.
+
+### Do Nothing
+
+Since clipboard options are considered to be basic functionality by most
+users, doing nothing to mitigate abuse is certainly an option:
+
+Pros:
+
+* Cut/copy/paste work as the user expects.
+
+Cons:
+
+* Users get no indication that page interacted with the clipboard, so if
+    they may be surprised to find things there they didn't explicitly
+    put there (possibly overwriting something they wanted to keep).
+
+### Require a user gesture
+
+Pros:
+
+* Harder for malicious code to trigger since it would require some social
+    engineering as well (to get the user interaction).
+
+Cons:
+
+* This would (by design) prevent purely programmatic access to the clipboard.
+
+### Only allow from front tab
+
+Pros:
+
+* This behavior is probably what the user expects. At least for cut/copy/paste.
+
+Cons:
+
+* It would prevent the creation of a clipboard history app. (Although I think
+    this might be a "Pro" since a clipboard history app is probably better
+    implemented as a native app.)
+
+### Pop-up Notifications
+
+A post-facto notification similar to what is done for fullscreen. Display
+something like: "New data pasted to clipboard" or "Data read from clipboard".
+
+Pros:
+
+* Low-friction for the user, while still notifying them of the clipboard
+access.
+
+Cons:
+
+* ???
+
+### Permission 
+
+Ask the user for permission, either at page load (as is done for cookies in 
+Europe) or when the feature is first used.
+
+Pros:
+
+* Users need to explicitly opt-in, so UA's can throw up their hands and claim
+    "Hey, it's not our fault" if something bad happens. ^_^
+
+Cons: 
+
+* Users dislike these interruptions to their workflow and tend not to read
+    and understand the implications. Especially with standard operations like
+    cut/copy/paste that don't sound scary.
+* Users have been trained to ignore these messages.
+
+
+## Current API
+
+What happens with `document.execCommand()` and the current clipboard operations
+that depend on it. 
 
 
 ## Acknowledgements
@@ -131,6 +265,7 @@ Lucas Garron (Google),
 Gary Kacmarcik (Google),
 Hallvord R. M. Steen (Mozilla),
 
+
 ## References
 
-***
+[Clipboard API](https://www.w3.org/TR/clipboard-apis/)
