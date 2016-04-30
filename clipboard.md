@@ -57,23 +57,41 @@ based on `document.execCommand()`. However, there have recently been
 questioning whether this is appropriate in the long term.
 
 
-## Current API
+## Motivation
+
+The specific issues that motivate this proposal are:
+
+* The current model is synchronous, so it blocks the main page.
+  * This makes permission prompts more irritating (since the page is blocked).
+  * This prevents sanitizing data types (like images) that need to be transcoded.
+    * Transcoding is required to guard against exploits in external parsers.
+    * It's not reasonable to block page while large images are being sanitized.
+
+* The code required to perform cut/copy/paste actions is... bizarre:
+  * To modify the clipboard, you need to add an event listener for 'copy'. This listener will
+    fire when you call `execCommand('copy')` and also for any user initiated copies.
+  * To copy part of the DOM, you need to modify the current selection.
+
+* `execCommand` is old API originally designed for editing the DOM and it has a large number of
+  [interoperability bugs](https://github.com/guardian/scribe/blob/master/BROWSERINCONSISTENCIES.md).
+  The latest version of the
+  [execCommand spec](https://w3c.github.io/editing/execCommand.html)
+  states that it is incomplete and not expected to advance beyond draft status.
+
+* In practice, many developers load a library to use `execCommand` properly. That shouldn't be
+  be necessary for something as basic clipboard cut/copy/paste.
+
+In addition,
+
+* Ease of use. Some web apps want to be able to copy to the clipboard without requiring a user gesture.
+
+
+## Current Clipboard API
 
 What happens with `document.execCommand()` and the current clipboard operations
 that depend on it. 
 
-
-## Motivation
-
-Web apps commonly offer a convenient “copy to clipboard” button. A few apps built on the web platform also have advanced use cases that benefit from more clipboard access. In 
-particular:
-
-* Some apps want to be able to copy a selection without requiring specific user interactions to copy/select the content.
-
-* Some apps (e.g. rich document editors) want to read the clipboard without requiring the user to initiate an OS “paste” action every time.
-
-* Some apps (e.g. remote desktop) want to receive updates about clipboard changes.
-
+TODO: Interaction with copy/paste events
 
 ## Proposal
 
@@ -103,49 +121,49 @@ Possibly have convenience methods like writeText(/* string */)
 Write example:
 
 ```javascript
-// Using convenience function to write a specific MIME type.
-navigator.clipboard.writeText("Howdy, partner!");
+  // Using convenience function to write a specific MIME type.
+  navigator.clipboard.writeText("Howdy, partner!");
 
-// Multiple MIME types.
-var data = new DataTransfer();
-data.items.add("text/plain", "Howdy, partner!");
-data.items.add("text/html", "<b>Howdy</b>, partner!");
-navigator.clipboard.write(data);
+  // Multiple MIME types.
+  var data = new DataTransfer();
+  data.items.add("text/plain", "Howdy, partner!");
+  data.items.add("text/html", "<b>Howdy</b>, partner!");
+  navigator.clipboard.write(data);
 
-// Use the Promise outcome to perform an action.
-navigator.clipboard.writeText("some text").then(function() {
-    console.log(“Copied to clipboard successfully!”);
-}, function() {
-    console.error(“Unable to write to clipboard. :-(”);
-});
+  // Use the Promise outcome to perform an action.
+  navigator.clipboard.writeText("some text").then(function() {
+      console.log(“Copied to clipboard successfully!”);
+  }, function() {
+      console.error(“Unable to write to clipboard. :-(”);
+  });
 ```
 
 Read example:
 
 ```javascript
-// Reading data from the clipboard.
-navigator.clipboard.read().then(function(data) {
-    for (var i = 0; i < data.items.length; i++) {
-        if (data.items[i].type == "text/plain") {
-            console.log(“Your string:”, data.items[i].getAs(“text/plain”))
-        } else {
-            console.error(“No text/plain data on clipboard.”);
-        }
-    }
-})
+  // Reading data from the clipboard.
+  navigator.clipboard.read().then(function(data) {
+      for (var i = 0; i < data.items.length; i++) {
+          if (data.items[i].type == "text/plain") {
+              console.log(“Your string:”, data.items[i].getAs(“text/plain”))
+          } else {
+              console.error(“No text/plain data on clipboard.”);
+          }
+      }
+  })
 ```
     
 Detect clipboard change example:
 
 ```javascript
-/**
- * @param {ClipboardEvent}
- */
-function listener(clipboardEvent) {
-    // Do stuff with clipboardEvent.clipboardData
-}
+  /**
+   * @param {ClipboardEvent}
+   */
+  function listener(clipboardEvent) {
+      // Do stuff with clipboardEvent.clipboardData
+  }
 
-navigator.clipboard.addEventListener(“clipboardchange”, listener);
+  navigator.clipboard.addEventListener(“clipboardchange”, listener);
 ```
 
 ## Asynchronous vs Event-driven
@@ -159,8 +177,8 @@ driven, which is
 There are a few avenues for abuse that are not specific to this proposal,
 but are applicable to any API that provides clipboard access.
 
-One of the abuse vectors in particular, pasting images, is part of the 
-motivation for this proposal. In order to clean up malicious images,
+It is one of these abuse vectors in particular, pasting images, that motivates 
+this proposal. In order to clean up malicious images,
 they would need to be decoded and it is not appropriate to do this on
 the main thread (large images could lock the browser).
 
@@ -170,8 +188,13 @@ Sniffing the clipboard contents. Of concern not just because of the possibility
 of PII, but also because it is not uncommon for users to copy/paste passwords
 (e.g., from a password manager to a website).
 
-Consider: Can we respect having clipboard contents marked as 'sensitive'? This
-would require OS support, but is apparently possible on OSX.
+Note, however, that it is already possible to sniff the clipboard contents:
+
+```javascript
+  document.addEventListener('copy', function(e) {
+    // Modify the document selection or call e.clipboardData.setData()
+  }
+```
 
 #### Writing to the clipboard
 
@@ -256,3 +279,7 @@ Hallvord R. M. Steen (Mozilla),
 ## References
 
 [Clipboard API](https://www.w3.org/TR/clipboard-apis/)
+
+Clipboard libraries:
+[lgarron/clipboard.js](https://github.com/lgarron/clipboard.js),
+[zenorocha/clipboard.js](https://github.com/zenorocha/clipboard.js)
