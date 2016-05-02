@@ -24,7 +24,7 @@ Proposal for a modern, asynchronous clipboard interface.
 ## Background
 
 An API for clipboard actions (cut, copy and paste) has long been desired for webpages,
-but agreeement has been slow because of various security and usability concerns with
+but agreement has been slow because of various security and usability concerns with
 the feature. In summary, giving web pages access to the clipboard introduces problems
 with clobbering (overwriting) and sniffing (surreptitiously reading) the clipboard.
 
