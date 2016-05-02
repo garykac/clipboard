@@ -30,7 +30,7 @@ with clobbering (overwriting) and sniffing (surreptitiously reading) the clipboa
 
 This lack of a consistent API has forced web developers who need this feature to rely
 on alternate methods (e.g., Flash, via [ZeroClipboard](http://zeroclipboard.org/)) which
-effectively trade one set of problems for another.
+simply trades one set of problems for another.
 
 Recently, however, all major browsers have converged on support for clipboard access
 using [`document.execCommand()`](https://w3c.github.io/editing/execCommand.html):
@@ -50,7 +50,16 @@ using [`document.execCommand()`](https://w3c.github.io/editing/execCommand.html)
 &sup3; The Safari Technology Preview ([announced on 2016-Mar-30](https://webkit.org/blog/6017/introducing-safari-technology-preview/))
 has support for cut and copy.
 
-As noted, earlier, the current [Clipboard API](https://www.w3.org/TR/clipboard-apis/)
+However, even with this increased support, there are still many inconsistencies across
+browser implementations. See
+[this blog post](https://www.lucidchart.com/techblog/2014/12/02/definitive-guide-copying-pasting-javascript/)
+for a description of the problems Javascript programmers face, and note the
+existence of many Javascript
+[clipboard](https://github.com/lgarron/clipboard.js)
+[libraries](https://github.com/zenorocha/clipboard.js)
+to help address these issues.
+
+As noted earlier, the current [Clipboard API](https://www.w3.org/TR/clipboard-apis/)
 specification that the browsers are implementing assumes that the API should be
 based on `document.execCommand()`. However, there have recently been
 [discussions on public-webapps](https://lists.w3.org/Archives/Public/public-webapps/2015JulSep/0235.html)
@@ -64,10 +73,10 @@ The specific issues that motivate this proposal are:
 * The current model is synchronous, so it blocks the main page.
   * This makes permission prompts more irritating (since the page is blocked).
   * This prevents sanitizing data types (like images) that need to be transcoded.
-    * Transcoding is required to guard against exploits in external parsers.
+    * Transcoding is sometimes required to guard against exploits in external parsers.
     * It's not reasonable to block page while large images are being sanitized.
 
-* The code required to perform cut/copy/paste actions is... bizarre:
+* The code required for programmatic clipboard actions is... bizarre:
   * To modify the clipboard, you need to add an event listener for 'copy'. This listener will
     fire when you call `execCommand('copy')` and also for any user initiated copies.
   * To copy part of the DOM, you need to modify the current selection.
@@ -88,10 +97,26 @@ In addition,
 
 ## Current Clipboard API
 
-What happens with `document.execCommand()` and the current clipboard operations
-that depend on it. 
+The current Clipboard API describes events that are fired when either:
 
-TODO: Interaction with copy/paste events
+1. the user selects one of the standard clipboard actions via the browser's UI
+    or keyboard shortcuts (these are "trusted" events), or
+2. javascript code sends one of these events (in which case, they are
+    "synthetic" and "untrusted").
+
+With this proposal, these events would still be present, but the actual
+clipboard access would be the Promise-based APIs rather than via `execCommand`.
+
+Detect clipboard change example:
+
+```javascript
+  function listener(e) {
+      // Do stuff with clipboardEvent.clipboardData
+  }
+
+  navigator.clipboard.addEventListener(“copy”, listener);
+```
+
 
 ## Proposal
 
@@ -99,26 +124,33 @@ This section provides more details about the proposal.
 
 #### `navigator.clipboard`
 
+The main clipboard object is part of the `navigator` because it is a
+"system" level object that is not tied to the current window or document.
+
 Note: Having this on the `navigator` means that it would be accessible
 from workers.
 
 #### `read()` and `write()` methods
 
-Return a `Promise`.
+These methods would return a `Promise` that is resolved when the reading or
+writing operation is complete.
 
-* `write()` would take a MimeTypeObject and return a Promise<>
-* `read()` would return a Promise<MimeTypeObject>
+* `write()` would take a `DataTransfer` and return a `Promise<>`
+* `read()` would return a `Promise<DataTransfer>`
 
-Where a MimeTypeObject is a dict of mimetype-string:values
-
-Possibly have convenience methods like writeText(/* string */)
+It is also desireable to have some convenience methods like `writeText()`
+or `writeHtml()`.
 
 #### Event listener for clipboard change events
+
+This event would fire whenever the clipboard contents are changed. If the
+clipboard contents are changed outside the browser, then this event would
+fire when the browser regains focus.
 
 
 ## Example Usage
 
-Write example:
+Example of writing to the clipboard:
 
 ```javascript
   // Using convenience function to write a specific MIME type.
@@ -138,7 +170,7 @@ Write example:
   });
 ```
 
-Read example:
+Example of reading from the clipboard:
 
 ```javascript
   // Reading data from the clipboard.
@@ -152,13 +184,10 @@ Read example:
       }
   })
 ```
-    
-Detect clipboard change example:
+
+Example of detecting clipboard changes:
 
 ```javascript
-  /**
-   * @param {ClipboardEvent}
-   */
   function listener(clipboardEvent) {
       // Do stuff with clipboardEvent.clipboardData
   }
@@ -166,21 +195,16 @@ Detect clipboard change example:
   navigator.clipboard.addEventListener(“clipboardchange”, listener);
 ```
 
-## Asynchronous vs Event-driven
-
-The current [Clipboard API](https://www.w3.org/TR/clipboard-apis/) is event
-driven, which is 
-
-
 ## Potential for Abuse
 
 There are a few avenues for abuse that are not specific to this proposal,
 but are applicable to any API that provides clipboard access.
 
-It is one of these abuse vectors in particular, pasting images, that motivates 
+It is one of these abuse vectors in particular, pasting images, that motivates
 this proposal. In order to clean up malicious images,
 they would need to be decoded and it is not appropriate to do this on
-the main thread (large images could lock the browser).
+the main thread (large images could lock the browser while the image is
+being processed).
 
 #### Reading from the clipboard
 
@@ -203,66 +227,56 @@ Inject malicious content onto the clipboard.
 ###### Pasting Text
 
 Malicious text can be in the form of commands (e.g., 'rm -rf /\n') or
-script ([Self-XSS](https://en.wikipedia.org/wiki/Self-XSS)). 
+script ([Self-XSS](https://en.wikipedia.org/wiki/Self-XSS)).
 
 ###### Pasting Images
 
 Images can be crafted to exploit bugs in the image-handling code, so they
-need to be scrubbed as well.
+need to be scrubbed as well. Transcoding large images can be computationally
+expensive, so it is not
 
 
-## Mitigating Abuse
+#### Mitigating Abuse
 
-To mitigate against potential abuse of this feature, we have a few obvious
-options, some of which can be combined.
+Currently, UAs mitigate abuse by either requiring a user gesture (e.g.,
+clicking on a button) or with a permission dialog. These approaches
+suffer from the following issues:
 
-#### Do Nothing
+**User gestures** provide defense against "drive-by" clipboard access, but the
+user receives no notifications if the clipboard is accessed as part of an
+unrelated user gesture. An example or this would be tricking user to click on
+innocous "OK" button and then silently accessing the clipboard. In this
+situation, the user grants no permission and receives no notification.
 
-Since clipboard options are considered to be basic functionality by most
-users, doing nothing to mitigate abuse is certainly an option:
+Pop-up **permission dialogs** can be problematic because clipboard events are
+cancelable, so the browser needs to wait until the event handler is done (to know
+whether or not it was canceled) before continuing. If the event handler
+directly calls `execCommand` (which is also synchronous), then the browser is
+blocked until the command (including any permission dialogs) is complete.
+Note that replacing `execCommand` with an asychronous clipboard API would
+make these permission dialogs more user-friendly.
 
-Pros:  Cut/copy/paste work as the user expects.
+For this feature, we should consider some combination of the following:
 
-Cons: Users get no indication that page interacted with the clipboard, so
-they may be surprised to find things there they didn't explicitly put there
-(possibly overwriting something they wanted to keep).
+* Require a user gesture. To protect against drive-by access, although this may
+    not be necessary with the right set of permissions.
+* Only allow clipboard access from code running in the front tab.
+* Pop-up Notifications. A post-facto notification similar to what is done for
+    fullscreen. Display something like: "New data pasted to clipboard" or "Data
+    read from clipboard".
+* Permission Dialog. With an async clipboard API, this would be more
+    acceptable since it wouldn't block the main process.
+* (Permissions API)[https://www.w3.org/TR/permissions/]. Add a "clipboard"
+    name to the registry
 
-#### Require a user gesture
 
-Pros: Harder for malicious code to trigger since it would require some social
-engineering as well (to get the user interaction).
+## MIME Types
 
-Cons: This would (by design) prevent purely programmatic access to the clipboard.
+To do: Need to agree on set of required mimetypes. Should we allow any mimetype
+and binary data?
 
-#### Only allow from front tab
-
-Pros: This behavior is probably what the user expects. At least for cut/copy/paste.
-
-Cons: It would prevent the creation of a clipboard history app. (Although I think
-this might be a "Pro" since a clipboard history app is probably better
-implemented as a native app.)
-
-#### Pop-up Notifications
-
-A post-facto notification similar to what is done for fullscreen. Display
-something like: "New data pasted to clipboard" or "Data read from clipboard".
-
-Pros: Low-friction for the user, while still notifying them of the clipboard
-access.
-
-Cons: ???
-
-#### Permission 
-
-Ask the user for permission, either at page load (as is done for cookies in 
-Europe) or when the feature is first used.
-
-Pros: Users need to explicitly opt-in, so UA's can throw up their hands and claim
-"Hey, it's not our fault" if something bad happens. ^_^
-
-Cons:  Users dislike these interruptions to their workflow and tend not to read
-and understand the implications. Especially with standard operations like
-cut/copy/paste that don't sound scary.
+This proposal is motivated by the desire to support image types in a safe
+manner.
 
 
 ## Acknowledgements
@@ -280,6 +294,3 @@ Hallvord R. M. Steen (Mozilla),
 
 [Clipboard API](https://www.w3.org/TR/clipboard-apis/)
 
-Clipboard libraries:
-[lgarron/clipboard.js](https://github.com/lgarron/clipboard.js),
-[zenorocha/clipboard.js](https://github.com/zenorocha/clipboard.js)
