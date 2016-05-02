@@ -54,7 +54,7 @@ However, even with this increased support, there are still many inconsistencies 
 browser implementations. See
 [this blog post](https://www.lucidchart.com/techblog/2014/12/02/definitive-guide-copying-pasting-javascript/)
 for a description of the problems Javascript programmers face, and note the
-existence of many Javascript
+existence of various Javascript
 [clipboard](https://github.com/lgarron/clipboard.js)
 [libraries](https://github.com/zenorocha/clipboard.js)
 to help address these issues.
@@ -80,6 +80,11 @@ The specific issues that motivate this proposal are:
   * To modify the clipboard, you need to add an event listener for 'copy'. This listener will
     fire when you call `execCommand('copy')` and also for any user initiated copies.
   * To copy part of the DOM, you need to modify the current selection.
+
+* The need for a notification event when the clipboard is mutated.
+   * Apps that synchronize the clipboard (like remote access apps) need this to
+     know when to send the updated clipboard contents to the secondary
+     system.
 
 * `execCommand` is old API originally designed for editing the DOM and it has a large number of
   [interoperability bugs](https://github.com/guardian/scribe/blob/master/BROWSERINCONSISTENCIES.md).
@@ -272,11 +277,12 @@ For this feature, we should consider some combination of the following:
 
 ## MIME Types
 
-To do: Need to agree on set of required mimetypes. Should we allow any mimetype
-and binary data?
-
 This proposal is motivated by the desire to support image types in a safe
-manner.
+manner, but there is a desire to handle all types safely.
+
+To do: Need to agree on set of required mimetypes. Can we safely allow any
+mimetype and binary data? What alternatives are there for application-specific
+data on the clipboard?
 
 
 ## Acknowledgements
