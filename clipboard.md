@@ -81,7 +81,7 @@ The specific issues that motivate this proposal are:
     fire when you call `execCommand('copy')` and also for any user initiated copies.
   * To copy part of the DOM, you need to modify the current selection.
 
-* The need for a notification event when the clipboard is mutated.
+* There is a need for a notification event when the clipboard is mutated.
    * Apps that synchronize the clipboard (like remote access apps) need this to
      know when to send the updated clipboard contents to the secondary
      system.
@@ -112,11 +112,20 @@ The current Clipboard API describes events that are fired when either:
 With this proposal, these events would still be present, but the actual
 clipboard access would be the Promise-based APIs rather than via `execCommand`.
 
+The current model of requiring some sort of permission or opt-in before allowing
+untrusted access to the clipboard would be retained.
+
+Note that with this proposal, the `ClipboardEvent` type could be replaced with
+a simple `Event` and all clipboard access could be through the
+`navigator.clipboard` object.
+
 Detect clipboard change example:
 
 ```javascript
-  function listener(e) {
-      // Do stuff with clipboardEvent.clipboardData
+  function listener(event) {
+      navigator.clipboard.read().then(function(data) {
+          // Do something with clipboard data.
+      });
   }
 
   navigator.clipboard.addEventListener(“copy”, listener);
@@ -193,8 +202,8 @@ Example of reading from the clipboard:
 Example of detecting clipboard changes:
 
 ```javascript
-  function listener(clipboardEvent) {
-      // Do stuff with clipboardEvent.clipboardData
+  function listener(event) {
+      // Do stuff with navigator.clipboard
   }
 
   navigator.clipboard.addEventListener(“clipboardchange”, listener);
@@ -243,7 +252,7 @@ expensive, so it is not
 
 #### Mitigating Abuse
 
-Currently, UAs mitigate abuse by either requiring a user gesture (e.g.,
+Currently, user agents mitigate abuse by either requiring a user gesture (e.g.,
 clicking on a button) or with a permission dialog. These approaches
 suffer from the following issues:
 
@@ -282,7 +291,8 @@ manner, but there is a desire to handle all types safely.
 
 To do: Need to agree on set of required mimetypes. Can we safely allow any
 mimetype and binary data? What alternatives are there for application-specific
-data on the clipboard?
+data on the clipboard? `DataTransfer` would need to be updated for this since
+it currently only supports text and files.
 
 
 ## Acknowledgements
