@@ -100,38 +100,6 @@ In addition,
 * Ease of use. Some web apps want to be able to copy to the clipboard without requiring a user gesture.
 
 
-## Current Clipboard API
-
-The current Clipboard API describes events that are fired when either:
-
-1. the user selects one of the standard clipboard actions via the browser's UI
-    or keyboard shortcuts (these are "trusted" events), or
-2. javascript code sends one of these events (in which case, they are
-    "synthetic" and "untrusted").
-
-With this proposal, these events would still be present, but the actual
-clipboard access would be the Promise-based APIs rather than via `execCommand`.
-
-The current model of requiring some sort of permission or opt-in before allowing
-untrusted access to the clipboard would be retained.
-
-Note that with this proposal, the `ClipboardEvent` type could be replaced with
-a simple `Event` and all clipboard access could be through the
-`navigator.clipboard` object.
-
-Detect clipboard change example:
-
-```javascript
-  function listener(event) {
-      navigator.clipboard.read().then(function(data) {
-          // Do something with clipboard data.
-      });
-  }
-
-  navigator.clipboard.addEventListener(“copy”, listener);
-```
-
-
 ## Proposal
 
 This section provides more details about the proposal.
@@ -208,6 +176,38 @@ Example of detecting clipboard changes:
 
   navigator.clipboard.addEventListener(“clipboardchange”, listener);
 ```
+
+## Current Clipboard API
+
+The current Clipboard API describes events that are fired when either:
+
+1. the user selects one of the standard clipboard actions via the browser's UI
+    or keyboard shortcuts (these are "trusted" events), or
+2. javascript code sends one of these events (in which case, they are
+    "synthetic" and "untrusted").
+
+With this proposal, these events would still be present, but the actual
+clipboard access would be the Promise-based APIs rather than via `execCommand`.
+
+The current model of requiring some sort of permission or opt-in before allowing
+untrusted access to the clipboard would be retained.
+
+Note that with this proposal, the `ClipboardEvent` type could be replaced with
+a simple `Event` and all clipboard access could be through the
+`navigator.clipboard` object.
+
+Detect clipboard change example:
+
+```javascript
+  function listener(event) {
+      navigator.clipboard.read().then(function(data) {
+          // Do something with clipboard data.
+      });
+  }
+
+  navigator.clipboard.addEventListener(“copy”, listener);
+```
+
 
 ## Potential for Abuse
 
