@@ -97,7 +97,9 @@ The specific issues that motivate this proposal are:
 
 In addition,
 
-* Ease of use. Some web apps want to be able to copy to the clipboard without requiring a user gesture.
+* Make it easier to support alternate permission models.
+   * For example, to enable web apps to copy to the clipboard without requiring a user gesture.
+   * Enable use of the Permissions API or a consent dialog that doesn't block the browser.
 
 
 ## Proposal
@@ -186,8 +188,10 @@ The current Clipboard API describes events that are fired when either:
 2. javascript code sends one of these events (in which case, they are
     "synthetic" and "untrusted").
 
-With this proposal, these events would still be present, but the actual
-clipboard access would be the Promise-based APIs rather than via `execCommand`.
+With this proposal, these events would still be present, but the recommended way
+to access the clipboard would be through the Promise-based APIs rather than
+via `execCommand` (although the current `execCommand`-based API would stick
+around for compatibility reasons).
 
 The current model of requiring some sort of permission or opt-in before allowing
 untrusted access to the clipboard would be retained.
@@ -226,17 +230,17 @@ Sniffing the clipboard contents. Of concern not just because of the possibility
 of PII, but also because it is not uncommon for users to copy/paste passwords
 (e.g., from a password manager to a website).
 
-Note, however, that it is already possible to sniff the clipboard contents:
+#### Writing to the clipboard
+
+Inject malicious content onto the clipboard.
+
+Note, that it is already possible to clobber the clipboard contents:
 
 ```javascript
   document.addEventListener('copy', function(e) {
     // Modify the document selection or call e.clipboardData.setData()
   }
 ```
-
-#### Writing to the clipboard
-
-Inject malicious content onto the clipboard.
 
 ###### Pasting Text
 
@@ -247,19 +251,19 @@ script ([Self-XSS](https://en.wikipedia.org/wiki/Self-XSS)).
 
 Images can be crafted to exploit bugs in the image-handling code, so they
 need to be scrubbed as well. Transcoding large images can be computationally
-expensive, so it is not
+expensive, so care must be taken to avoid processing them on the main thread.
 
 
 #### Mitigating Abuse
 
-Currently, user agents mitigate abuse by either requiring a user gesture (e.g.,
-clicking on a button) or with a permission dialog. These approaches
-suffer from the following issues:
+Currently, user agents mitigate abuse by untrusted actions by either requiring
+a user gesture (e.g., clicking on a button) or with a permission dialog.
+These approaches suffer from the following issues:
 
 **User gestures** provide defense against "drive-by" clipboard access, but the
 user receives no notifications if the clipboard is accessed as part of an
 unrelated user gesture. An example or this would be tricking user to click on
-innocous "OK" button and then silently accessing the clipboard. In this
+innocous "OK" button and then silently writing to the clipboard. In this
 situation, the user grants no permission and receives no notification.
 
 Pop-up **permission dialogs** can be problematic because clipboard events are
@@ -280,7 +284,7 @@ For this feature, we should consider some combination of the following:
     read from clipboard".
 * Permission Dialog. With an async clipboard API, this would be more
     acceptable since it wouldn't block the main process.
-* (Permissions API)[https://www.w3.org/TR/permissions/]. Add a "clipboard"
+* [Permissions API](https://www.w3.org/TR/permissions/). Add a "clipboard"
     name to the registry
 
 
