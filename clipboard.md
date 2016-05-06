@@ -196,6 +196,10 @@ around for compatibility reasons).
 The current model of requiring some sort of permission or opt-in before allowing
 untrusted access to the clipboard would be retained.
 
+Basically, the intent (if there's agreement) is to merge this into the
+current Clipboard API document so that all the clipboard-related APIs live
+in the same document.
+
 Note that with this proposal, the `ClipboardEvent` type could be replaced with
 a simple `Event` and all clipboard access could be through the
 `navigator.clipboard` object.
