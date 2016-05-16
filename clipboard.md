@@ -94,7 +94,7 @@ The specific issues that motivate this proposal are:
 * In practice, many developers load a library to use `execCommand` properly. That shouldn't be
   be necessary for something as basic clipboard cut/copy/paste.
 
-In addition,
+And finally,
 
 * Make it easier to support alternate permission models.
    * For example, to enable web apps to copy to the clipboard without requiring a user gesture.
