@@ -79,7 +79,6 @@ The specific issues that motivate this proposal are:
 * The code required for programmatic clipboard actions is... bizarre:
   * To modify the clipboard, you need to add an event listener for 'copy'. This listener will
     fire when you call `execCommand('copy')` and also for any user initiated copies.
-  * To copy part of the DOM, you need to modify the current selection.
 
 * There is a need for a notification event when the clipboard is mutated.
    * Apps that synchronize the clipboard (like remote access apps) need this to
