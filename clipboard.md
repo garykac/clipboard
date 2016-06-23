@@ -38,7 +38,7 @@ using [`document.execCommand()`](https://w3c.github.io/editing/execCommand.html)
                    | cut  | copy | paste
     -------------- | ---- | ---- | -----
     IE &sup1;      |   9  |   9  |    9
-    Chrome &sup2;  |  43  |  43  |   43
+    Chrome &sup2;  |  43  |  43  |   no
     Firefox &sup2; |  41  |  41  |    ?
     Opera &sup2;   |  29  |  29  |   29
     Safari &sup2;  | yes &sup3;  |  yes &sup3;  |   ?
