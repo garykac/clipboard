@@ -94,8 +94,7 @@ The specific issues that motivate this proposal are:
   [execCommand spec](https://w3c.github.io/editing/execCommand.html)
   states that it is incomplete and not expected to advance beyond draft status.
 
-* In practice, many developers load a library to use `execCommand` properly. That shouldn't be
-  be necessary for something as basic clipboard cut/copy/paste.
+* In practice, many developers load a library to use `execCommand` properly. That shouldn't be necessary for something as basic clipboard cut/copy/paste.
 
 And finally,
 
