@@ -143,15 +143,15 @@ Example of writing to the clipboard:
 
   // Multiple MIME types.
   var data = new DataTransfer();
-  data.items.add("text/plain", "Howdy, partner!");
-  data.items.add("text/html", "<b>Howdy</b>, partner!");
+  data.items.add("Howdy, partner!", "text/plain");
+  data.items.add("<b>Howdy</b>, partner!", "text/html");
   navigator.clipboard.write(data);
 
   // Use the Promise outcome to perform an action.
   navigator.clipboard.writeText("some text").then(function() {
-      console.log(“Copied to clipboard successfully!”);
+      console.log("Copied to clipboard successfully!");
   }, function() {
-      console.error(“Unable to write to clipboard. :-(”);
+      console.error("Unable to write to clipboard. :-(");
   });
 ```
 
@@ -162,9 +162,9 @@ Example of reading from the clipboard:
   navigator.clipboard.read().then(function(data) {
       for (var i = 0; i < data.items.length; i++) {
           if (data.items[i].type == "text/plain") {
-              console.log(“Your string:”, data.items[i].getAs(“text/plain”))
+              console.log("Your string:", data.items[i].getAs("text/plain"))
           } else {
-              console.error(“No text/plain data on clipboard.”);
+              console.error("No text/plain data on clipboard.");
           }
       }
   })
@@ -177,7 +177,7 @@ Example of detecting clipboard changes:
       // Do stuff with navigator.clipboard
   }
 
-  navigator.clipboard.addEventListener(“clipboardchange”, listener);
+  navigator.clipboard.addEventListener("clipboardchange", listener);
 ```
 
 ## Current Clipboard API
@@ -214,7 +214,7 @@ Detect clipboard change example:
       });
   }
 
-  navigator.clipboard.addEventListener(“copy”, listener);
+  navigator.clipboard.addEventListener("copy", listener);
 ```
 
 
