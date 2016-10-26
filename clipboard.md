@@ -140,8 +140,8 @@ Example of writing to the clipboard:
 
   // Multiple MIME types.
   var data = new DataTransfer();
-  data.items.add("text/plain", "Howdy, partner!");
-  data.items.add("text/html", "<b>Howdy</b>, partner!");
+  data.items.add("Howdy, partner!", "text/plain");
+  data.items.add("<b>Howdy</b>, partner!", "text/html");
   navigator.clipboard.write(data);
 
   // Use the Promise outcome to perform an action.
