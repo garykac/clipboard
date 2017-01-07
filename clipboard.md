@@ -214,7 +214,7 @@ Detect clipboard change example:
       });
   }
 
-  navigator.clipboard.addEventListener(“copy”, listener);
+  navigator.clipboard.addEventListener(“clipboardchange”, listener);
 ```
 
 
