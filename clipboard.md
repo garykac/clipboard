@@ -41,17 +41,14 @@ using [`document.execCommand()`](https://w3c.github.io/editing/execCommand.html)
     Chrome &sup2;  |  43  |  43  |   no
     Firefox &sup2; |  41  |  41  |    ?
     Opera &sup2;   |  29  |  29  |   29
-    Safari &sup2;  | yes &sup3;  |  yes &sup3;  |   ?
-    Edge &sup2;  |  12  | 12   |  14 <sup>4</sup>
+    Safari &sup2;  | 10   |  10  |   ?
+    Edge &sup2;  |  12  | 12   |  14 &sup3;
 
 &sup1; A permission prompt to the user when the feature is used.
 
 &sup2; Only permitted when executing code in response to a user action or gesture.
 
-&sup3; The Safari Technology Preview ([announced on 2016-Mar-30](https://webkit.org/blog/6017/introducing-safari-technology-preview/))
-has support for cut and copy.
-
-<sup>4</sup> Edge 14 supports paste only through an offline-managed Allow List.
+&sup3; Edge 14 supports paste only through an offline-managed Allow List.
 
 However, even with this increased support, there are still many inconsistencies across
 browser implementations. See
