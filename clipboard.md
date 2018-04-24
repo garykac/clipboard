@@ -35,14 +35,14 @@ simply trades one set of problems for another.
 Recently, however, all major browsers have converged on support for clipboard access
 using [`document.execCommand()`](https://w3c.github.io/editing/execCommand.html):
 
-                   | cut  | copy | paste
-    -------------- | ---- | ---- | -----
-    IE &sup1;      |   9  |   9  |    9
-    Chrome &sup2;  |  43  |  43  |   no
-    Firefox &sup2; |  41  |  41  |    ?
-    Opera &sup2;   |  29  |  29  |   29
-    Safari &sup2;  | yes &sup3;  |  yes &sup3;  |   ?
-    Edge &sup2;  |  12  | 12   |  14 <sup>4</sup>
+|                | cut  | copy | paste |
+|--------------- | ---- | ---- | ----- |
+| IE &sup1;      |   9  |   9  |    9  |
+| Chrome &sup2;  |  43  |  43  |   no  |
+| Firefox &sup2; |  41  |  41  |    ?  |
+| Opera &sup2;   |  29  |  29  |   29  |
+| Safari &sup2;  | yes &sup3;  |  yes &sup3;  |   ? |
+| Edge &sup2;    |  12  | 12   |  14 <sup>4</sup> |
 
 &sup1; A permission prompt to the user when the feature is used.
 
